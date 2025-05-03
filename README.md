@@ -1,5 +1,5 @@
 # Feature
-* **ALL Multi-language support**
+* **ALL Messages Multi-language support**
 * **ALL Messages Variable Support**
 * Multi-language and Variable support for randomized Broadcast.
 * Player Join or Leave Message.
@@ -22,13 +22,16 @@ You can see in the broadcast file or in the messages language file the differenc
 * `[@PINGLIMIT]` - Plugin configure `Ping Options > High Ping Limit (Ms)` value
 
 **Variables must be used in the following format:**
+
 1. All uppercase letters
 2. Add the `@` symbol in front of the letters
 3. Starting with the `[ ` symbol
 4. Ends with the `]` symbol
 
 # Configuration
+
 ## Plugin configure
+
 Plugin configure path: `\oxide\config\Broadcast.json`
 
 The Default Configuration is Control Function Enablement with Base Settings
@@ -54,16 +57,18 @@ The Default Configuration is Control Function Enablement with Base Settings
 ```
 
 ## Broadcast configure
+
 Broadcast configure Path:`\oxide\data\Broadcast\*.json`
 
 The `Broadcast configure` is used to store Broadcasts in different languages.
 
 ### How is work?
 
-> **If multiple language files are not configured, then the server language filesare used by default (en.json is most cases in server language)**
+> **First will find player language files If not find in folder, then using server language file by default (en.json is most cases in server language)**
+> If all the files are empty, no broadcast will be sent, but will be sent a warning to the console.
 
 In order to support sending broadcasts to players in different languages,
-you need to configure the contents of (Language_code.json) here
+you need to configure the contents of `\oxide\data\Broadcast\` folder `Language_code.json` here
 
 like `\oxide\data\Broadcast\en.json` (en.json is server language in most cases)
 ```json
@@ -75,8 +80,6 @@ like `\oxide\data\Broadcast\en.json` (en.json is server language in most cases)
   ]
 }
 ```
-
-You can create more Language_code.json on `\oxide\data\Broadcast\` folders
 
 like `\oxide\data\Broadcast\zh-CN.json` this wiil be Broadcast to Chinese players.
 ```json
@@ -102,7 +105,4 @@ or `\oxide\data\Broadcast\ru.json` for Russian players.
 
 # Localization
 
-you can create or edit lang file to support more content.
-
-
-
+You can create or edit the contents of `\oxide\lang\{language folder}\Broadcast.json` for localization!
