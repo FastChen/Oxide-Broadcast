@@ -11,7 +11,7 @@ using Oxide.Core.Plugins;
 
 namespace Oxide.Plugins;
 
-[Info("Broadcast", "FastChen", "1.0.0")]
+[Info("Broadcast", "FastChen", "1.1.0")]
 [Description("A multiple languages supported variables Broadcast and player status.")]
 public class Broadcast : CovalencePlugin
 {
@@ -33,6 +33,15 @@ public class Broadcast : CovalencePlugin
             
             [JsonProperty(PropertyName = "Show Player Leave Message (true/false)")]
             public bool ShowLeaveMessage { get; set; } = true;
+
+            [JsonProperty(PropertyName = "Show Player Kicked Message (true/false)")]
+            public bool ShowKickedMessage { get; set; } = true;
+
+            [JsonProperty(PropertyName = "Show Player Banned Message (true/false)")]
+            public bool ShowBannedMessage { get; set; } = true;
+
+            [JsonProperty(PropertyName = "Show Player Unbanned Message (true/false)")]
+            public bool ShowUnbannedMessage { get; set; } = true;
         }
 
         public class BroadcastOptions
@@ -79,6 +88,9 @@ public class Broadcast : CovalencePlugin
             {"PlayerConnected", "[@PLAYER] 加入!"},
             {"PlayerDisconnected", "[@PLAYER] 离开!"},
             {"PlayerHighPing", "[@PLAYER] 当前你的 Ping 值 [@PING](ms) 高于限制: [@PINGLIMIT](ms)!"},
+            {"PlayerKicked", "[@PLAYER] 已被踢出服务器，原因：[@REASON]!"},
+            {"PlayerBanned", "[@PLAYER] 已被封禁，原因：[@REASON]!"},
+            {"PlayerUnbanned", "[@PLAYER] 已解除封禁!"},
             
         }, this, "zh-CN");
 
@@ -87,7 +99,11 @@ public class Broadcast : CovalencePlugin
             {"Prefix", "<color=#68CDFC>[ Broadcast ]</color> "},
             {"PlayerConnected", "[@PLAYER] Joined!"},
             {"PlayerDisconnected", "[@PLAYER] Disconnected!"},
-            {"PlayerHighPing", "[@PLAYER] Your Ping [@PING](ms) is above the limit: [@PINGLIMIT](ms)!"}
+            {"PlayerHighPing", "[@PLAYER] Your Ping [@PING](ms) is above the limit: [@PINGLIMIT](ms)!"},
+            {"PlayerKicked", "[@PLAYER] kicked. reason: [@REASON]!"},
+            {"PlayerBanned", "[@PLAYER] banned. reason: [@REASON]!"},
+            {"PlayerUnbanned", "[@PLAYER] was unbanned!"},
+
         },this, lang.GetServerLanguage());
     }
 
@@ -131,67 +147,69 @@ public class Broadcast : CovalencePlugin
         AutoBroadcast();
     }
 
-    
     [Command("bc")]
     private void BroadcastCommand(IPlayer player, string command, string[] args)
     {
-        // if (args.Length < 1)
-        // {
-        //     player.Reply("Test successful!");
-
-        //     player.Reply($"player language:{lang.GetLanguage(player.Id)}");
-        //     return;
-        // }
-
         string prefix = Lang("Prefix", player.Id);
 
-        foreach(string arg in args)
+        foreach (string arg in args)
         {
-            // if(arg == "send" && args.Length >= 1)
-            // {
-            //     var message = args[1];
-            //     SendMessageToOnlinePlayers(message);
-            // } else
-            if(arg == "ping")
+            if (arg == "ping")
             {
                 player.Reply($"{prefix}Pong:{player.Ping}(ms)");
             }
         }
-
     }
 
     void OnUserConnected(IPlayer player)
     {
         if(!_config.Player.ShowJoinMessage){ return; }
 
-        string message = Lang("PlayerConnected", player.Id)
-        .Replace("[@PLAYER]", player.Name);
-        
-        Puts(message);
-        SendMessageToOnlinePlayers(message);
+        SendMessageToOnlinePlayers("PlayerConnected", player.Name);
     }
 
     void OnUserDisconnected(IPlayer player)
     {
         if(!_config.Player.ShowLeaveMessage){ return; }
 
-        string message = Lang("PlayerDisconnected", player.Id)
-        .Replace("[@PLAYER]", player.Name);
-        
-        Puts(message);
-        SendMessageToOnlinePlayers(message);
+        SendMessageToOnlinePlayers("PlayerDisconnected", player.Name);
     }
 
-    void SendMessageToOnlinePlayers(string message)
+    void OnUserKicked(IPlayer player, string reason)
+    {
+        if(!_config.Player.ShowKickedMessage){ return; }
+
+        SendMessageToOnlinePlayers("PlayerKicked", player.Name, reason);
+    }
+
+    void OnUserBanned(string name, string id, string ipAddress, string reason)
+    {
+        if(!_config.Player.ShowBannedMessage){ return; }
+
+        SendMessageToOnlinePlayers("PlayerBanned", name, reason);
+    }
+
+    void OnUserUnbanned(string name, string id, string ipAddress)
+    {
+        if(!_config.Player.ShowUnbannedMessage){ return; }
+
+        SendMessageToOnlinePlayers("PlayerUnbanned", name);
+    }
+
+    void SendMessageToOnlinePlayers(string messageKey, string playerName = "", string reason = "")
     {
         if (players.Connected.Count() <= 0) return;
 
-        foreach (var player in players.Connected){
+        foreach (var player in players.Connected)
+        {
             string prefix = Lang("Prefix", player.Id);
+            string message = Lang(messageKey, player.Id)
+            .Replace("[@PLAYER]", playerName)
+            .Replace("[@REASON]", string.IsNullOrEmpty(reason) ? "no reason" : reason);
+
             player.Message($"{prefix}{message}");
         }
     }
-
 
     void AutoBroadcast()
     {
